@@ -40,6 +40,7 @@ public class OrderService {
                 .map(OrderLineItems::getSkuCode)
                 .toList();
 
+        //Wysyłanie zamówienia
         InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
                 .uri("http://inventory-service/api/inventory",
                         uriBuilder -> uriBuilder.queryParam("skuCode", skuCodes).build())
@@ -53,9 +54,10 @@ public class OrderService {
         if (allProductsInStock) {
             orderRepository.save(order);
             kafkaTemplate.send("notificationTopic", new OrderPlacedEvent(order.getOrderNumber()));
-            // publish Order Placed Event
+            // Zamówienie złożone
             return "Zamówienie przesłane";
         } else {
+            // Brak produktu
             throw new IllegalArgumentException("Brak produktu w magazynie");
             }
         }
